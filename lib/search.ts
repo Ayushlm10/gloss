@@ -1,3 +1,4 @@
+import { localMode } from "./local-mode";
 /**
  * Web search with Exa, for answers that need the world beyond the text.
  * Fact-check always searches first; any other question offers the model a
@@ -36,6 +37,7 @@ export type WebResults = { sources: Source[]; excerpts: string[]; usd: number };
 
 /** Null when search is off, fails or times out: the answer goes ahead without it. */
 export async function webSearch(query: string, signal?: AbortSignal): Promise<WebResults | null> {
+  if (localMode) return null;
   const key = process.env.EXA_API_KEY;
   if (!key || !query.trim()) return null;
   try {

@@ -1,4 +1,5 @@
 "use client";
+import { useLocalMode } from "@/components/ui/LocalMode";
 
 import { forwardRef } from "react";
 import { ArrowRight, BookmarkPlus, FileUp, Link2, TextCursorInput } from "lucide-react";
@@ -22,6 +23,7 @@ type Props = {
 
 /** The one thing to do on the landing page: give it something to read. */
 export const ImportBar = forwardRef<HTMLInputElement, Props>(function ImportBar({ url, setUrl, busy, error, errorNeedsKey, onSubmit, onSave, onPickFile, onPasteText }, ref) {
+  const local = useLocalMode();
   return (
     <div className="mt-10 w-full max-w-[600px] text-left sm:mt-12">
       <form
@@ -71,9 +73,9 @@ export const ImportBar = forwardRef<HTMLInputElement, Props>(function ImportBar(
       </form>
 
       <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[13.5px] text-ink-3">
-        <button type="button" onClick={onPickFile} disabled={!!busy} className="inline-flex items-center gap-1.5 transition-colors hover:text-ink">
+        {!local && <button type="button" onClick={onPickFile} disabled={!!busy} className="inline-flex items-center gap-1.5 transition-colors hover:text-ink">
           <FileUp size={15} /> Open a PDF
-        </button>
+        </button>}
         <button type="button" onClick={onPasteText} disabled={!!busy} className="inline-flex items-center gap-1.5 transition-colors hover:text-ink">
           <TextCursorInput size={15} /> Paste text
         </button>

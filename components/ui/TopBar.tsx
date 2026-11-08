@@ -1,4 +1,5 @@
 "use client";
+import { useLocalMode } from "@/components/ui/LocalMode";
 
 import Link from "next/link";
 import { Library } from "lucide-react";
@@ -12,9 +13,10 @@ import { SettingsMenu } from "@/components/ui/SettingsMenu";
  * the same places on both, so moving between them never shifts anything.
  */
 export function TopBar({ here, onLibrary }: { here?: "library"; onLibrary?: () => void }) {
+  const local = useLocalMode();
   return (
     <header className="relative z-20 mx-auto flex h-[var(--topbar-h)] w-full max-w-[1400px] shrink-0 items-center justify-between px-5 max-[380px]:px-4 sm:px-8">
-      <Lockup />
+      <Lockup local={local} />
       <nav aria-label="Main" className="flex items-center gap-1 max-[380px]:gap-0">
         <Link
           href="/library"
@@ -31,7 +33,7 @@ export function TopBar({ here, onLibrary }: { here?: "library"; onLibrary?: () =
         </Link>
         <SettingsMenu compact />
         <KeyMenu />
-        <Account />
+        {!local && <Account />}
       </nav>
     </header>
   );

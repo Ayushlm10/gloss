@@ -1,4 +1,5 @@
 "use client";
+import { useLocalMode } from "@/components/ui/LocalMode";
 
 import { Show, SignInButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
@@ -15,6 +16,7 @@ import { fmtCost, useReader } from "./context";
  * what to keep in mind before relying on them, and a map of the text's movements. The map also labels the rail and the top bar.
  */
 export function Brief() {
+  const local = useLocalMode();
   const { ix, jumpTo } = useReader();
   const brief = useStore((s) => s.briefs[ix.article.id]);
   const open = useStore((s) => s.briefOpen);
@@ -48,7 +50,7 @@ export function Brief() {
     return (
       <div className="mt-6 flex flex-wrap items-center gap-3 rounded-[16px] border border-rule px-4 py-3.5 text-[13.5px]">
         <p className="text-rubric-text">{brief.error}</p>
-        {brief.needKey && (
+        {brief.needKey && !local && (
           <>
             <button type="button" onClick={openKeyMenu} className="font-medium text-ink underline decoration-rule-strong underline-offset-4">
               Add your Together key
@@ -154,7 +156,7 @@ export function Brief() {
 
           <div className="mt-5 flex items-center gap-3 text-[11.5px] tabular-nums text-ink-4">
             <span>
-              {modelKey ? MODELS[modelOf(modelKey)].label : ""}
+              {brief.provider === "chatgpt" ? "ChatGPT plan" : modelKey ? MODELS[modelOf(modelKey)].label : ""}
               {usage ? ` / ${usage.promptTokens.toLocaleString()} in, ${usage.completionTokens} out / ${fmtCost(usage.costUsd)}` : ""}
             </span>
             <button type="button" onClick={() => fetchBrief(ix)} className="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-1 hover:bg-sunk hover:text-ink">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocalMode } from "@/components/ui/LocalMode";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -19,11 +20,17 @@ import { LibraryLine, type Saved } from "./LibraryLine";
 import { ShelfSheet, type ShelfItem } from "./ShelfSheet";
 
 /** One screen: a headline that shows what it does, a place to paste, and your shelf. */
-export function Landing({ signedIn: signedInAtLoad = false }: { signedIn?: boolean }) {
-  const router = useRouter();
-  // Known on the server at load, so a signed-in reader never sees the demo flash; then live, for a sign-in from this page.
+export function Landing({ signedIn = false }: { signedIn?: boolean }) {
+  const local = useLocalMode();
+  return local ? <LandingBody signedIn={false} /> : <HostedLanding signedInAtLoad={signedIn} />;
+}
+function HostedLanding({ signedInAtLoad }: { signedInAtLoad: boolean }) {
   const { isLoaded, isSignedIn } = useAuth();
-  const signedIn = isLoaded ? Boolean(isSignedIn) : signedInAtLoad;
+  return <LandingBody signedIn={isLoaded ? Boolean(isSignedIn) : signedInAtLoad} />;
+}
+function LandingBody({ signedIn }: { signedIn: boolean }) {
+  const local = useLocalMode();
+  const router = useRouter();
   const hydrate = useStore((s) => s.hydrate);
   const hydrated = useStore((s) => s.hydrated);
   const library = useStore((s) => s.library);
@@ -268,7 +275,7 @@ export function Landing({ signedIn: signedInAtLoad = false }: { signedIn?: boole
       <input
         ref={fileRef}
         type="file"
-        accept=".pdf,.txt,.md,.markdown,application/pdf,text/plain,text/markdown"
+        accept={local ? ".txt,.md,.markdown,text/plain,text/markdown" : ".pdf,.txt,.md,.markdown,application/pdf,text/plain,text/markdown"}
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
@@ -282,7 +289,7 @@ export function Landing({ signedIn: signedInAtLoad = false }: { signedIn?: boole
         <div className="pointer-events-none fixed inset-0 z-[90] grid place-items-center bg-bg/80 backdrop-blur-sm" style={{ animation: "fade 0.15s" }}>
           <div className="rounded-[28px] border-[1.5px] border-dashed border-[var(--rubric)] px-16 py-14 text-center">
             <p className="font-serif text-[40px] leading-none text-ink">Drop to read</p>
-            <p className="mt-3 text-[14px] text-ink-3">PDF, .txt or .md</p>
+            <p className="mt-3 text-[14px] text-ink-3">{local ? ".txt or .md" : "PDF, .txt or .md"}</p>
           </div>
         </div>
       )}

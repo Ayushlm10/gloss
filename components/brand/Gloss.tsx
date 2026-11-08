@@ -28,14 +28,13 @@ export function GlossWordmark() {
 }
 
 /** The app's mark, a hairline, then Together as the maker. */
-export function Lockup({ href = "/" }: { href?: string }) {
+export function Lockup({ href = "/", local = false }: { href?: string; local?: boolean }) {
   return (
     <div className="flex h-9 items-center gap-3.5 max-[380px]:gap-2.5">
       <Link href={href} aria-label="Gloss, back to your library" className="rounded-md">
         <GlossWordmark />
       </Link>
-      <span aria-hidden className="h-[18px] w-px bg-rule-strong" />
-      <TogetherLink />
+      {!local && <><span aria-hidden className="h-[18px] w-px bg-rule-strong" /><TogetherLink /></>}
     </div>
   );
 }

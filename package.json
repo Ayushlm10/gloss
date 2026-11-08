@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start --port 3100",
     "lint": "tsc --noEmit",
-    "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs"
+    "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
+    "local:build": "GLOSS_LOCAL=1 GLOSS_LOOPBACK=1 NEXT_PUBLIC_CLERK_KEYLESS_DISABLED=true next build",
+    "local:start": "node scripts/local-server.mjs start",
+    "local:dev": "node scripts/local-server.mjs dev"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.13",

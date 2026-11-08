@@ -1,3 +1,4 @@
+import { localMode } from "@/lib/local-mode";
 import { needKey } from "@/lib/quota";
 import { APP_UA } from "@/lib/together";
 import { TTS_MAX_CHARS, TTS_MODEL, TTS_URL, TTS_VOICE } from "@/lib/voice";
@@ -10,6 +11,7 @@ export const maxDuration = 60;
  * MP3, so playback can begin before the whole clip exists.
  */
 export async function POST(req: Request) {
+  if (localMode) return new Response(null, { status: 404 });
   let body: { text?: string; apiKey?: string };
   try {
     body = await req.json();

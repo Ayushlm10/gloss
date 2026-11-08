@@ -1,4 +1,5 @@
 "use client";
+import { useLocalMode } from "@/components/ui/LocalMode";
 
 import { useEffect, useRef, useState } from "react";
 import { Keyboard, NotebookPen } from "lucide-react";
@@ -12,6 +13,7 @@ import { useGlosses, useHighlights, useStore } from "@/lib/store";
 import { useReader } from "./context";
 
 export function TopBar({ currentN, pastTitle, listenFrom }: { currentN: number | null; pastTitle: boolean; listenFrom: () => string | null }) {
+  const local = useLocalMode();
   const { ix, jumpTo } = useReader();
   const [hidden, setHidden] = useState(false);
   const [scrolledUp, setScrolledUp] = useState(false);
@@ -86,7 +88,7 @@ export function TopBar({ currentN, pastTitle, listenFrom }: { currentN: number |
       } ${scrolled ? "border-b border-rule bg-bg/85 backdrop-blur-md" : "border-b border-transparent"}`}
     >
       <div className="mx-auto flex h-full max-w-[1440px] items-center gap-4 px-4 sm:px-6">
-        <Lockup />
+        <Lockup local={local} />
 
         {/* Always a spacer; the running title shows in it from tablet width up. */}
         <div className={`flex min-w-0 flex-1 justify-center transition-opacity duration-300 ${pastTitle ? "opacity-100" : "pointer-events-none opacity-0"}`}>
@@ -121,7 +123,7 @@ export function TopBar({ currentN, pastTitle, listenFrom }: { currentN: number |
               <Keyboard size={17} strokeWidth={1.8} />
             </button>
           </span>
-          <ListenButton from={listenFrom} />
+          {!local && <ListenButton from={listenFrom} />}
           <SettingsMenu />
           <KeyMenu />
           <button
@@ -139,7 +141,7 @@ export function TopBar({ currentN, pastTitle, listenFrom }: { currentN: number |
               <span className="min-w-[18px] rounded-full bg-[var(--rubric)] px-1.5 text-center text-[11px] font-semibold leading-[18px] tabular-nums text-white">{count}</span>
             )}
           </button>
-          <Account />
+          {!local && <Account />}
         </nav>
       </div>
       <span ref={barRef} aria-hidden className="absolute inset-x-0 -bottom-px h-[2px] origin-left bg-[var(--rubric)] opacity-80" style={{ transform: "scaleX(0)" }} />

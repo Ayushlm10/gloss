@@ -1,4 +1,5 @@
 "use client";
+import { useLocalMode } from "@/components/ui/LocalMode";
 
 import { SignInButton } from "@clerk/nextjs";
 import { useEffect, useRef, useState } from "react";
@@ -17,6 +18,7 @@ export type AddTab = "links" | "agent";
  * saves to it through the Gloss MCP server.
  */
 export function AddPanel({ tab, onTab, onClose, signedIn }: { tab: AddTab; onTab: (t: AddTab) => void; onClose: () => void; signedIn: boolean }) {
+  const local = useLocalMode();
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -39,9 +41,9 @@ export function AddPanel({ tab, onTab, onClose, signedIn }: { tab: AddTab; onTab
       <section role="dialog" aria-modal aria-label="Add to the library" className="add-panel">
         <header className="flex items-center justify-between gap-3">
           <div className="lib-sort !ml-0" role="tablist" aria-label="Add">
-            <button type="button" role="tab" aria-selected={tab === "agent"} aria-checked={tab === "agent"} onClick={() => onTab("agent")}>
+            {!local && <button type="button" role="tab" aria-selected={tab === "agent"} aria-checked={tab === "agent"} onClick={() => onTab("agent")}>
               Connect an agent
-            </button>
+            </button>}
             <button type="button" role="tab" aria-selected={tab === "links"} aria-checked={tab === "links"} onClick={() => onTab("links")}>
               Save links manually
             </button>
@@ -50,7 +52,7 @@ export function AddPanel({ tab, onTab, onClose, signedIn }: { tab: AddTab; onTab
             <X size={17} />
           </button>
         </header>
-        {tab === "links" ? <Links /> : <Agent signedIn={signedIn} />}
+        {tab === "links" ? <Links /> : (local ? <p>Agent connections are unavailable in local mode.</p> : <Agent signedIn={signedIn} />)}
       </section>
     </div>,
     document.body
@@ -63,12 +65,13 @@ export function AddPanel({ tab, onTab, onClose, signedIn }: { tab: AddTab; onTab
  * holds its place, and the plus turns.
  */
 export function AddButton({ onClick, compact }: { onClick: () => void; compact?: boolean }) {
+  const local = useLocalMode();
   return (
     <button type="button" onClick={onClick} className={`lib-add${compact ? " is-compact" : ""}`}>
-      <MarkStack size={compact ? 22 : 26} />
+      {local ? <Plus size={compact ? 22 : 26} /> : <MarkStack size={compact ? 22 : 26} />}
       <span className="min-w-0 text-left">
         <span className="lib-add-title">Add articles</span>
-        {!compact && <span className="lib-add-sub">Connect an agent, or paste links</span>}
+        {!compact && <span className="lib-add-sub">{local ? "Save article links" : "Connect an agent, or paste links"}</span>}
       </span>
       {!compact && (
         <span className="lib-add-plus" aria-hidden>
@@ -93,6 +96,7 @@ function linksIn(text: string): string[] {
 }
 
 function Links() {
+  const local = useLocalMode();
   const [text, setText] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [busy, setBusy] = useState(false);
@@ -147,7 +151,7 @@ function Links() {
     <div className="mt-5">
       <p className="text-[19px] font-serif leading-tight text-ink">Save links to your library</p>
       <p className="mt-1 text-[13px] text-ink-3">
-        One or many, a line each. Gloss reads each page in and sorts it onto a topic. PDFs work too. Leaving Pocket, Instapaper or Raindrop?{" "}
+        One or many, a line each. Gloss reads each page in and sorts it onto a topic. {local ? "PDFs are not available in local mode." : "PDFs work too."} Leaving Pocket, Instapaper or Raindrop?{" "}
         <button type="button" onClick={() => fileRef.current?.click()} className="text-ink-2 underline decoration-rule-strong underline-offset-2 hover:text-ink">
           Drop its export here
         </button>

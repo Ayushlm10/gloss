@@ -1,4 +1,5 @@
 "use client";
+import { useLocalMode } from "@/components/ui/LocalMode";
 
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -30,6 +31,7 @@ import { Rail } from "./Rail";
 import { TopBar } from "./TopBar";
 
 export function Reader({ id, initial }: { id: string; initial: Article | null }) {
+  const local = useLocalMode();
   const [article, setArticle] = useState<Article | null>(initial);
   const [missing, setMissing] = useState(false);
   const hydrate = useStore((s) => s.hydrate);
@@ -43,10 +45,10 @@ export function Reader({ id, initial }: { id: string; initial: Article | null })
     if (!initial) {
       // Not on this device: it may be in the reader's account, fetched now that it is opened.
       void loadDoc(id)
-        .then((a) => a ?? fetchText(id))
+        .then((a) => a ?? (local ? null : fetchText(id)))
         .then((a) => (a ? setArticle(a) : setMissing(true)));
     }
-  }, [hydrate, id, initial]);
+  }, [hydrate, id, initial, local]);
 
   // The text was read again (more carefully, or a page in the background): show the new reading in
   // place. Scroll anchoring alone did not hold when a page above the reader was swapped, so the
@@ -107,6 +109,7 @@ const GUTTER_WIDE = 64;
 const GUTTER_MID = 52;
 
 function ReaderInner({ article }: { article: Article }) {
+  const local = useLocalMode();
   const ix = useMemo(() => indexArticle(article), [article]);
   const articleId = article.id;
   const [articleEl, setArticleEl] = useState<HTMLDivElement | null>(null);
@@ -526,7 +529,7 @@ function ReaderInner({ article }: { article: Article }) {
                     </a>
                   )}
                 </div>
-                <CarefulRead article={article} />
+                {!local && <CarefulRead article={article} />}
                 <div className="focus-hide rise" style={{ animationDelay: "200ms" }}>
                   <Brief />
                 </div>
@@ -557,11 +560,11 @@ function ReaderInner({ article }: { article: Article }) {
                 </p>
                 {article.source && <p>From {article.source}.</p>}
                 <p className="mt-1">
-                  Glosses are powered by DeepSeek V4.1 Flash, served by{" "}
+                  {local ? "Glosses use your ChatGPT plan." : <>Glosses are powered by DeepSeek V4.1 Flash, served by{" "}
                   <a href={BRAND.togetherUrl} target="_blank" rel="noopener noreferrer" className="text-ink-2 underline decoration-rule-strong underline-offset-4 hover:text-ink">
                     Together AI
                   </a>
-                  .
+                  .</>}
                 </p>
                 <div className="mt-6 flex flex-wrap gap-2">
                   <button type="button" onClick={() => setUI({ notebookOpen: true })} className="h-9 rounded-full border border-rule px-4 text-[13px] font-medium text-ink-2 hover:border-rule-strong hover:text-ink">
@@ -591,8 +594,8 @@ function ReaderInner({ article }: { article: Article }) {
         )}
 
         <Lens rootEl={articleEl} openHighlight={openHl} />
-        <ListenBar />
-        <SignInNudge />
+        {!local && <ListenBar />}
+        {!local && <SignInNudge />}
         <Notebook />
         <Peek peek={peek} />
         <Shortcuts />

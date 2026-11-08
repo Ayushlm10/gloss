@@ -4,6 +4,7 @@
  * loopback and link-local addresses before it is fetched.
  */
 
+import { localMode } from "@/lib/local-mode";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { parseHTML } from "linkedom";
@@ -214,7 +215,7 @@ export async function fetchArticle(raw: string, opts: { pdf?: boolean } = {}): P
     return { ok: true, pdf, name: name.toLowerCase().endsWith(".pdf") ? name : `${name}.pdf` };
   }
   if (type.includes("application/pdf")) {
-    return { ok: false, error: "That link is a PDF. Download it, then drop the file here.", status: 415 };
+    return { ok: false, error: localMode ? "PDFs are not available in local mode. Paste the text instead." : "That link is a PDF. Download it, then drop the file here.", status: 415 };
   }
   if (!type.includes("html")) return { ok: false, error: "That link is not a web page.", status: 415 };
 
