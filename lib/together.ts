@@ -1,3 +1,4 @@
+import { localMode } from "./local-mode";
 /**
  * Together AI client. Server-side only. Raw fetch, OpenAI-compatible SSE.
  *
@@ -59,6 +60,7 @@ export async function* streamChat(req: {
   /** "none" sends the tools (a conversation that already used one needs them) but asks for an answer. */
   toolChoice?: "auto" | "none";
 }): AsyncGenerator<StreamEvent> {
+  if (localMode) { yield { type: "error", text: "Together is unavailable in local mode." }; return; }
   const model: ModelEntry = MODELS[req.model];
   const apiKey = req.apiKey?.trim() || process.env.TOGETHER_API_KEY;
   if (!apiKey) {
@@ -170,6 +172,7 @@ export async function completeJSON<T>(req: {
   /** Let the model reason before it answers, for checking a text against itself. Its thinking spends from maxTokens. */
   thinking?: boolean;
 }): Promise<{ ok: true; data: T; usage: Usage } | { ok: false; error: string }> {
+  if (localMode) return { ok: false, error: "Together is unavailable in local mode." };
   const model: ModelEntry = MODELS[req.model];
   const apiKey = req.apiKey?.trim() || process.env.TOGETHER_API_KEY;
   if (!apiKey) return { ok: false, error: "No Together API key. Set TOGETHER_API_KEY, or add your own key." };

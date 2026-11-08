@@ -1,3 +1,5 @@
+import { localMode } from "@/lib/local-mode";
+import { LocalModeProvider } from "@/components/ui/LocalMode";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Atkinson_Hyperlegible_Next, Literata, Newsreader, Schibsted_Grotesk } from "next/font/google";
@@ -77,15 +79,14 @@ const CLERK_APPEARANCE = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${serif.variable} ${sans.variable} ${book.variable} ${legible.variable}`} suppressHydrationWarning>
+    <html lang="en" data-gloss-local={localMode ? "true" : undefined} className={`${serif.variable} ${sans.variable} ${book.variable} ${legible.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
       </head>
       <body>
-        <ClerkProvider appearance={CLERK_APPEARANCE}>
-          {children}
-          <SyncAgent />
-        </ClerkProvider>
+        <LocalModeProvider local={localMode}>
+          {localMode ? children : <ClerkProvider appearance={CLERK_APPEARANCE}>{children}<SyncAgent /></ClerkProvider>}
+        </LocalModeProvider>
         <Tooltips />
         {/* Plausible: cookieless page views, from the production site only, so previews and local runs never count. */}
         {process.env.VERCEL_ENV === "production" && <Script defer data-domain="usegloss.io" src="https://plausible.io/js/script.js" strategy="afterInteractive" />}

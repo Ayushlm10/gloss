@@ -28,6 +28,7 @@ export async function importFromFile(file: File, onProgress?: (p: number, label?
   const name = file.name.toLowerCase();
   try {
     if (name.endsWith(".pdf") || file.type === "application/pdf") {
+      if (typeof document !== "undefined" && document.documentElement.dataset.glossLocal === "true") return { ok: false, error: "PDFs are not available in local mode. Paste the text instead." };
       const { pdfToArticle, PdfError } = await import("./pdf");
       try {
         return { ok: true, article: await pdfToArticle(file, onProgress), file };

@@ -10,6 +10,7 @@ import { MODELS, modelOf } from "./models";
 const KEY_STORAGE = "together:api-key";
 
 export function readApiKey(): string {
+  if (typeof document !== "undefined" && document.documentElement.dataset.glossLocal === "true") return "";
   try {
     return localStorage.getItem(KEY_STORAGE) ?? "";
   } catch {
@@ -43,8 +44,9 @@ async function stream(ix: DocIndex, glossId: string, modelKey: ModelKey) {
   if (!g) return;
 
   // History after the first answer: alternating user/assistant, ending with the new user turn.
+  const local = document.documentElement.dataset.glossLocal === "true";
   const history = g.turns
-    .slice(1, -1)
+    .slice(local ? 0 : 1, -1)
     .filter((t) => !t.error)
     .map((t) => ({ role: t.role, content: t.content }));
 
@@ -193,8 +195,8 @@ export async function fetchBrief(ix: DocIndex) {
       body: JSON.stringify({ apiKey: apiKey || undefined, model: modelKey, doc: docPayload(ix) }),
     });
     noteFree(res);
-    const j = (await res.json()) as { brief?: BriefData; usage?: Usage; error?: string; code?: string };
-    if (j.brief) useStore.getState().setBrief(id, { status: "ready", data: j.brief, usage: j.usage, modelKey, at: Date.now() });
+    const j = (await res.json()) as { brief?: BriefData; usage?: Usage; provider?: "chatgpt"; error?: string; code?: string };
+    if (j.brief) useStore.getState().setBrief(id, { status: "ready", data: j.brief, usage: j.usage, modelKey, provider: j.provider, at: Date.now() });
     else useStore.getState().setBrief(id, { status: "error", error: j.error ?? "Could not write the gloss.", needKey: j.code === "need_key" });
   } catch (e) {
     useStore.getState().setBrief(id, { status: "error", error: `Connection lost: ${String(e)}` });

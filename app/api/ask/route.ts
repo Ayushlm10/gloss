@@ -1,4 +1,6 @@
-import { buildMessages, isLengthKey, webBlock, type DocPayload, type ThreadPayload } from "@/lib/prompts";
+import { localMode } from "@/lib/local-mode";
+import { codexAnswer } from "@/lib/codex";
+import { buildLocalPrompt, buildMessages, isLengthKey, webBlock, type DocPayload, type ThreadPayload } from "@/lib/prompts";
 import { DEFAULT_MODEL, isModelKey, streamChat, type ChatMessage, type StreamEvent } from "@/lib/together";
 import { ACTIONS } from "@/lib/actions";
 import { chargeFree, checkFree, estimateUsd, needKey } from "@/lib/quota";
@@ -40,7 +42,27 @@ export async function POST(req: Request) {
   if ((thread.quote?.length ?? 0) > 12_000 || (thread.question?.length ?? 0) > 4_000) {
     return Response.json({ error: "That selection or question is too long." }, { status: 413 });
   }
-  const history = (body.history ?? []).slice(-12).filter((m) => m && (m.role === "user" || m.role === "assistant"));
+  const turns = (body.history ?? []).filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string");
+  const history = localMode ? turns : turns.slice(-12);
+
+  if (localMode) {
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (event: StreamEvent) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+        try {
+          const prompt = buildLocalPrompt(doc, thread, history, isLengthKey(body.length) ? body.length : "normal");
+          const answer = await codexAnswer(prompt.instructions, prompt.data, req.signal);
+          send({ type: "meta", model: "ChatGPT plan" });
+          send({ type: "content", text: answer });
+          send({ type: "done" });
+        } catch (e) {
+          if (!req.signal.aborted) send({ type: "error", text: e instanceof Error ? e.message : "Could not answer." });
+        } finally { controller.close(); }
+      },
+    });
+    return new Response(stream, { headers: { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache, no-transform" } });
+  }
 
   const model = isModelKey(body.model) ? body.model : DEFAULT_MODEL;
   const headerKey = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "").trim();

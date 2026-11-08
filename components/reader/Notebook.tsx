@@ -1,4 +1,5 @@
 "use client";
+import { useLocalMode } from "@/components/ui/LocalMode";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Show, SignInButton } from "@clerk/nextjs";
@@ -22,6 +23,7 @@ type Filter = "all" | "q" | "hl";
 
 /** Everything you marked and asked, in reading order, as questions and answers you can scan. */
 export function Notebook() {
+  const local = useLocalMode();
   const { ix } = useReader();
   const open = useStore((s) => s.notebookOpen);
   const setUI = useStore((s) => s.setUI);
@@ -151,7 +153,7 @@ export function Notebook() {
               </li>
             ))}
           </ol>
-          <Show when="signed-out">
+          {!local && <Show when="signed-out">
             <p className="px-1 pb-1 pt-4 text-center text-[12.5px] leading-relaxed text-ink-3">
               These live in this browser only.{" "}
               <SignInButton mode="modal">
@@ -161,7 +163,7 @@ export function Notebook() {
               </SignInButton>{" "}
               to keep them on every device.
             </p>
-          </Show>
+          </Show>}
         </div>
       )}
     </aside>

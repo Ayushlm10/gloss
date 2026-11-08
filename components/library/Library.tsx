@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocalMode } from "@/components/ui/LocalMode";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState, ViewTransition } from "react";
@@ -37,8 +38,16 @@ const SAMPLES_UNTIL = 6;
  * drop onto the shelf as they arrive.
  */
 export function Library() {
-  const router = useRouter();
+  const local = useLocalMode();
+  return local ? <LibraryBody user={null} isSignedIn={false} /> : <HostedLibrary />;
+}
+function HostedLibrary() {
   const { user, isSignedIn } = useUser();
+  return <LibraryBody user={user ? { firstName: user.firstName, fullName: user.fullName } : null} isSignedIn={Boolean(isSignedIn)} />;
+}
+function LibraryBody({ user, isSignedIn }: { user: { firstName: string | null; fullName: string | null } | null; isSignedIn: boolean }) {
+  const local = useLocalMode();
+  const router = useRouter();
   const hydrate = useStore((s) => s.hydrate);
   const hydrated = useStore((s) => s.hydrated);
   const library = useStore((s) => s.library);
@@ -81,7 +90,7 @@ export function Library() {
   useEffect(() => () => clearTimeout(waveTimer.current), []);
 
   // Signed in, the shelf is checked every few seconds while it's open, so an agent's saves arrive as you look.
-  useEffect(() => watchShelf(), []);
+  useEffect(() => local ? undefined : watchShelf(), [local]);
 
   // The top bar frosts over once the page moves under it.
   const [scrolled, setScrolled] = useState(false);
@@ -130,8 +139,8 @@ export function Library() {
 
   // Painted covers, when they're turned on: one at a time, for every sorted text without one.
   useEffect(() => {
-    if (hydrated && prefs.paintedCovers) void paintAll(useStore.getState().library);
-  }, [hydrated, prefs.paintedCovers, library]);
+    if (!local && hydrated && prefs.paintedCovers) void paintAll(useStore.getState().library);
+  }, [hydrated, prefs.paintedCovers, library, local]);
 
   const own = library.filter((x) => x.origin !== "sample");
   const books = useMemo(() => {
@@ -313,7 +322,7 @@ export function Library() {
                   )}
                 </p>
               </div>
-              <AddButton onClick={() => setAdding("agent")} />
+              <AddButton onClick={() => setAdding(local ? "links" : "agent")} />
             </div>
             {fromAgent.length > 0 && (
               <button type="button" className="lib-news" onClick={() => (setTag("agent"), setOnly(null), go({ view: "shelf" }))}>
@@ -329,7 +338,7 @@ export function Library() {
             <button type="button" onClick={() => go({ view: "topics" })} className="lib-back">
               <ChevronLeft size={16} /> All topics
             </button>
-            <AddButton compact onClick={() => setAdding("agent")} />
+            <AddButton compact onClick={() => setAdding(local ? "links" : "agent")} />
           </div>
         ) : (
           <div className="lib-tools">
@@ -393,7 +402,7 @@ export function Library() {
                 {hydrated && shown.size === 0 && books.length > 0 && (
                   <p className="py-6 text-center text-[14px] text-ink-3">Nothing on the shelves matches{q ? <> &ldquo;{q}&rdquo;</> : ""}.</p>
                 )}
-                {hydrated && own.length < SAMPLES_UNTIL ? (
+                {hydrated && !local && own.length < SAMPLES_UNTIL ? (
                   <Starter count={own.length} signedIn={Boolean(isSignedIn)} onAdd={setAdding} />
                 ) : (
                   hydrated && <p className="lib-hint">Click a spine to take it down. Arrow keys walk the shelf.</p>

@@ -1,4 +1,5 @@
 "use client";
+import { useLocalMode } from "@/components/ui/LocalMode";
 
 import Link from "next/link";
 import { useMemo } from "react";
@@ -37,6 +38,7 @@ function SignInLine({ children }: { children: string }) {
  * one is due, otherwise the lines you marked last. Before that, how it works.
  */
 export function HomeBelow({ signedIn }: { signedIn: boolean }) {
+  const local = useLocalMode();
   const hydrated = useStore((s) => s.hydrated);
   const highlights = useStore((s) => s.highlights);
   const library = useStore((s) => s.library);
@@ -61,14 +63,14 @@ export function HomeBelow({ signedIn }: { signedIn: boolean }) {
   // Held open at its full size until the shelf is read, so nothing shifts when it fills.
   if (!hydrated) return <div className="desk is-holding" aria-hidden />;
 
-  const foot = signedIn ? null : <SignInLine>{all.length ? "These live in this browser only." : "Keep your highlights on every device."}</SignInLine>;
+  const foot = local ? <span>These live in this browser only.</span> : signedIn ? null : <SignInLine>{all.length ? "These live in this browser only." : "Keep your highlights on every device."}</SignInLine>;
 
   // Before any highlights: Hassan's three steps, for first-timers and anyone signed out.
   if (!all.length)
     return (
       <Desk label="How it works" foot={foot}>
         <ol className="desk-tiles">
-          {STEPS.map((s, i) => (
+          {(local ? [{ title: "Paste a link or text", body: "An article or a blog post." }, ...STEPS.slice(1)] : STEPS).map((s, i) => (
             <li key={s.title} className="desk-tile is-step" style={{ ["--i" as string]: i }}>
               <span className="desk-step-n">{i + 1}</span>
               <p className="mt-3 text-[14.5px] font-medium text-ink">{s.title}</p>

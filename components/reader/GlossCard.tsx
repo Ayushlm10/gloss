@@ -1,4 +1,5 @@
 "use client";
+import { useLocalMode } from "@/components/ui/LocalMode";
 
 import { Show, SignInButton } from "@clerk/nextjs";
 import { forwardRef, useEffect, useRef, useState, type CSSProperties } from "react";
@@ -29,6 +30,9 @@ type Props = {
 };
 
 function Receipt({ t }: { t: Turn }) {
+  const local = useLocalMode();
+  if (local && t.streaming) return <span>Thinking</span>;
+  if (local && !t.usage && t.model !== "ChatGPT plan") return <span>ChatGPT</span>;
   if (!t.usage) return <span>{t.model}</span>;
   const u = t.usage;
   return (
@@ -45,6 +49,8 @@ function Receipt({ t }: { t: Turn }) {
 
 /** Free answers are spent: the way to keep going is the reader's own key, or, signed out, signing in for more. */
 function KeyButton() {
+  const local = useLocalMode();
+  if (local) return null;
   return (
     <span className="mt-2.5 flex flex-wrap items-center gap-2">
       <button

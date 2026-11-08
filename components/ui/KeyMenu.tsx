@@ -1,4 +1,5 @@
 "use client";
+import { useLocalMode } from "./LocalMode";
 
 import { useEffect, useState } from "react";
 import { KeyRound } from "lucide-react";
@@ -13,6 +14,18 @@ type Free = { left: number; signedIn: boolean };
 
 /** Bring your own Together key. Stored in this browser only. A little reading a day is free without one. */
 export function KeyMenu() {
+  const local = useLocalMode();
+  return local ? <LocalKeyMenu /> : <HostedKeyMenu />;
+}
+function LocalKeyMenu() {
+  const [ready, setReady] = useState<boolean | null>(null);
+  const refresh = () => fetch("/api/key").then((r) => r.json()).then((j: { ready?: boolean }) => setReady(Boolean(j.ready))).catch(() => setReady(false));
+  useEffect(() => { void refresh(); }, []);
+  return <Popover label="ChatGPT plan" tip="ChatGPT plan status" width={320} triggerClass={barBtn} trigger={<span>ChatGPT</span>}>
+    {() => <div><p className="text-ink">ChatGPT plan: {ready === null ? "Checking" : ready ? "Ready" : "Sign-in required"}</p><p className="mt-2 text-sm text-ink-3">To sign in, run this command in Terminal, then refresh:</p><code className="mt-2 block break-all text-xs">{`CODEX_HOME="$HOME/Library/Application Support/gloss-local/codex-home" "$HOME/.local/bin/codex" -c 'cli_auth_credentials_store="file"' -c 'forced_login_method="chatgpt"' login`}</code><button type="button" onClick={refresh} className="mt-3 underline">Refresh status</button></div>}
+  </Popover>;
+}
+function HostedKeyMenu() {
   const [key, setKey] = useState("");
   const [house, setHouse] = useState<boolean | null>(null);
   const [free, setFree] = useState<Free | null>(null);

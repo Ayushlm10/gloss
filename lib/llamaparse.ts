@@ -1,3 +1,4 @@
+import { localMode } from "./local-mode";
 /**
  * LlamaParse, for "Read it more carefully": a hard PDF (two columns, tables,
  * maths, a scan) read again by a layout-aware parser. Server-side only.
@@ -14,6 +15,7 @@ export type Tier = "fast" | "cost_effective" | "agentic" | "agentic_plus";
 export type Parsed = { ok: true; pages: string[]; credits: number | null } | { ok: false; error: string };
 
 export async function parseCarefully(pdf: Blob, opts: { tier: Tier; maxPages: number; signal?: AbortSignal; deadlineMs?: number }): Promise<Parsed> {
+  if (localMode) return { ok: false, error: "Careful reading is unavailable in local mode." };
   const key = process.env.LLAMA_CLOUD_API_KEY;
   if (!key) return { ok: false, error: "Careful reading is not set up on this server." };
   const auth = { Authorization: `Bearer ${key}` };

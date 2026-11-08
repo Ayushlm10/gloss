@@ -1,13 +1,16 @@
 "use client";
+import { useLocalMode } from "@/components/ui/LocalMode";
 
 import { Globe } from "lucide-react";
 import { useStore } from "@/lib/store";
 
 /** Whether answers may look things up on the web. On by default; the model decides when. Fact-check always searches. */
 export function WebSwitch({ tone = "plain" }: { tone?: "plain" | "lens" }) {
+  const local = useLocalMode();
   const on = useStore((s) => s.settings.search);
   const setSettings = useStore((s) => s.setSettings);
   const lens = tone === "lens";
+  if (local) return null;
   return (
     <button
       type="button"

@@ -1,4 +1,5 @@
 "use client";
+import { useLocalMode } from "./LocalMode";
 
 import { useState, type MouseEvent, type ReactNode } from "react";
 import { flushSync } from "react-dom";
@@ -122,6 +123,7 @@ let swap: { finished: Promise<void> } | null = null;
  * page underneath immediately, so the page itself is the preview.
  */
 export function SettingsMenu({ compact = false }: { compact?: boolean }) {
+  const local = useLocalMode();
   const settings = useStore((s) => s.settings);
   const setSettings = useStore((s) => s.setSettings);
   const focusMode = useStore((s) => s.focusMode);
@@ -264,11 +266,11 @@ export function SettingsMenu({ compact = false }: { compact?: boolean }) {
                     <Chip label="Numbers" icon={<Pilcrow size={14} />} on={settings.numbers} onChange={(v) => set({ numbers: v })} />
                     <Chip label="Map" icon={<MapIcon size={14} />} on={settings.rail} onChange={(v) => set({ rail: v })} />
                     <Chip label="Focus" icon={<Focus size={14} />} on={focusMode} onChange={(v) => setUI({ focusMode: v })} />
-                    <Chip label="Listen" icon={<Headphones size={14} />} on={settings.listen} onChange={(v) => set({ listen: v })} />
+                    {!local && <Chip label="Listen" icon={<Headphones size={14} />} on={settings.listen} onChange={(v) => set({ listen: v })} />}
                   </div>
                 </>
               )}
-              <PaintedCovers />
+              {!local && <PaintedCovers />}
             </div>
           )}
 

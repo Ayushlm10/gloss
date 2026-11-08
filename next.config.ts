@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   serverExternalPackages: ["linkedom"],
   poweredByHeader: false,
+  env: { GLOSS_BUILT_LOCAL: process.env.GLOSS_LOCAL === "1" ? "1" : "0" },
   async headers() {
     return [
       {
